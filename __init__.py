@@ -37,8 +37,8 @@ class PIDAutoTune(KettleController):
 			self.heater_off()
 			self.sleep(wait_time)
 
-		cbpi.cache.get("kettle")[self.id].state = False		
-		cbpi.emit("UPDATE_KETTLE", cbpi.cache.get("kettle").get(self.id))
+		cbpi.cache.get("kettle")[self.kettle_id].state = False		
+		cbpi.emit("UPDATE_KETTLE", cbpi.cache.get("kettle").get(self.kettle_id))
 
 		if atune.state == atune.STATE_SUCCEEDED:
 			for rule in atune.tuningRules:
@@ -48,7 +48,7 @@ class PIDAutoTune(KettleController):
 				atune.log('I: {0}\n'.format(params.Ki))
 				atune.log('D: {0}\n\n'.format(params.Kd))
 			self.notify("Auto Tune Complete", "PID Auto Tuning was successful", type="success", timeout=None)
-		else:
+		elif atune.state == atune.STATE_FAILED:
 			self.notify("Auto Tune Error", "PID Auto Tuning failed", type="danger", timeout=None)
 
 # Based on a fork of Arduino PID AutoTune Library
