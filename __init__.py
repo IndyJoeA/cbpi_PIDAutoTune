@@ -37,9 +37,8 @@ class PIDAutoTune(KettleController):
 			self.heater_off()
 			self.sleep(wait_time)
 
-		app.brewapp_kettle_state[self.kid]["automatic"] = False
-		stopPID(self.kid)
-		socketio.emit('kettle_state_update', app.brewapp_kettle_state, namespace ='/brew')
+		cbpi.cache.get("kettle")[self.id].state = False		
+		cbpi.emit("UPDATE_KETTLE", cbpi.cache.get("kettle").get(self.id))
 
 		if atune.state == atune.STATE_SUCCEEDED:
 			for rule in atune.tuningRules:
