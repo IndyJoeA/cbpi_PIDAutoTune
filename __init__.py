@@ -17,8 +17,16 @@ class PIDAutoTune(KettleController):
 	b_maxout = Property.Number("max. output %", True, 100)
 	c_lookback = Property.Number("lookback seconds", True, 30)
 
+	def autoOff(self):
+		cbpi.cache.get("kettle")[self.kettle_id].state = False
+		cbpi.emit("UPDATE_KETTLE", cbpi.cache.get("kettle").get(self.kettle_id))
+
+	def stop(self):
+		if self.is_running():
+			self.notify("AutoTune Interrupted", "AutoTune has been interrupted and was not able to finish", type="danger", timeout=None)
+
 	def run(self):
-		self.notify("Auto Tune In Progress", "Do not turn off Auto mode until Auto Tuning is complete", type="success", timeout=None)
+		self.notify("AutoTune In Progress", "Do not turn off Auto mode until AutoTuning is complete", type="success", timeout=None)
 	
 		sampleTime = 5
 		wait_time = 5
@@ -26,7 +34,13 @@ class PIDAutoTune(KettleController):
 		outmax = float(self.b_maxout)
 		lookbackSec = float(self.c_lookback)
 		setpoint = self.get_target_temp()
-		atune = AutoTuner(setpoint, outstep, sampleTime, lookbackSec, 0, outmax)
+		try:
+			atune = AutoTuner(setpoint, outstep, sampleTime, lookbackSec, 0, outmax)
+		except Exception as e:
+			self.notify("AutoTune Error", str(e), type="danger", timeout=None)
+			atune.log(str(e))
+			self.autoOff() 
+		atune.log("AutoTune will now begin")
 
 		while self.is_running() and not atune.run(self.get_temp()):
 			heat_percent = atune.output
@@ -37,19 +51,20 @@ class PIDAutoTune(KettleController):
 			self.heater_off()
 			self.sleep(wait_time)
 
-		cbpi.cache.get("kettle")[self.kettle_id].state = False		
-		cbpi.emit("UPDATE_KETTLE", cbpi.cache.get("kettle").get(self.kettle_id))
+		self.autoOff()
 
 		if atune.state == atune.STATE_SUCCEEDED:
+			atune.log("AutoTune has succeeded")
 			for rule in atune.tuningRules:
 				params = atune.getPIDParameters(rule)
 				atune.log('rule: {0}\n'.format(rule))
 				atune.log('P: {0}\n'.format(params.Kp))
 				atune.log('I: {0}\n'.format(params.Ki))
 				atune.log('D: {0}\n\n'.format(params.Kd))
-			self.notify("Auto Tune Complete", "PID Auto Tuning was successful", type="success", timeout=None)
+			self.notify("AutoTune Complete", "PID AutoTune was successful", type="success", timeout=None)
 		elif atune.state == atune.STATE_FAILED:
-			self.notify("Auto Tune Error", "PID Auto Tuning failed", type="danger", timeout=None)
+			atune.log("AutoTune has failed")
+			self.notify("AutoTune Failed", "PID AutoTune has failed", type="danger", timeout=None)
 
 # Based on a fork of Arduino PID AutoTune Library
 # See https://github.com/t0mpr1c3/Arduino-PID-AutoTune-Library
@@ -77,15 +92,15 @@ class AutoTuner(object):
 	def __init__(self, setpoint, outputstep=10, sampleTimeSec=5, lookbackSec=60,
 				 outputMin=float('-inf'), outputMax=float('inf'), noiseband=0.5, getTimeMs=None):
 		if setpoint is None:
-			raise ValueError('setpoint must be specified')
+			raise ValueError('Kettle setpoint must be specified')
 		if outputstep < 1:
-			raise ValueError('outputstep must be greater or equal to 1')
+			raise ValueError('Output step % must be greater or equal to 1')
 		if sampleTimeSec < 1:
-			raise ValueError('sampleTimeSec must be greater or equal to 1')
+			raise ValueError('Sample Time Seconds must be greater or equal to 1')
 		if lookbackSec < sampleTimeSec:
-			raise ValueError('lookbackSec must be greater or equal to sampleTimeSec')
+			raise ValueError('Lookback Seconds must be greater or equal to Sample Time Seconds (5)')
 		if outputMin >= outputMax:
-			raise ValueError('outputMin must be less than outputMax')
+			raise ValueError('Min Output % must be less than Max Output %')
 
 		self._inputs = deque(maxlen=round(lookbackSec / sampleTimeSec))
 		self._sampleTime = sampleTimeSec * 1000
