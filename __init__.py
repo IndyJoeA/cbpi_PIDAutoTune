@@ -19,11 +19,14 @@ class PIDAutoTune(KettleController):
 
 	def autoOff(self):
 		cbpi.cache.get("kettle")[self.kettle_id].state = False
+		super(KettleController, self).stop()
 		cbpi.emit("UPDATE_KETTLE", cbpi.cache.get("kettle").get(self.kettle_id))
 
 	def stop(self):
 		if self.is_running():
 			self.notify("AutoTune Interrupted", "AutoTune has been interrupted and was not able to finish", type="danger", timeout=None)
+		
+		super(KettleController, self).stop()
 
 	def run(self):
 		self.notify("AutoTune In Progress", "Do not turn off Auto mode until AutoTuning is complete", type="success", timeout=None)
@@ -55,13 +58,17 @@ class PIDAutoTune(KettleController):
 
 		if atune.state == atune.STATE_SUCCEEDED:
 			atune.log("AutoTune has succeeded")
+			self.notify("AutoTune Complete", "PID AutoTune was successful", type="success", timeout=None)
 			for rule in atune.tuningRules:
 				params = atune.getPIDParameters(rule)
-				atune.log('rule: {0}\n'.format(rule))
-				atune.log('P: {0}\n'.format(params.Kp))
-				atune.log('I: {0}\n'.format(params.Ki))
-				atune.log('D: {0}\n\n'.format(params.Kd))
-			self.notify("AutoTune Complete", "PID AutoTune was successful", type="success", timeout=None)
+				atune.log('rule: {0}'.format(rule))
+				atune.log('P: {0}'.format(params.Kp))
+				atune.log('I: {0}'.format(params.Ki))
+				atune.log('D: {0}'.format(params.Kd))
+				if rule == "brewing":
+					self.notify("AutoTune P Value", str(params.Kp), type="info", timeout=None)
+					self.notify("AutoTune I Value", str(params.Ki), type="info", timeout=None)
+					self.notify("AutoTune D Value", str(params.Kd), type="info", timeout=None)
 		elif atune.state == atune.STATE_FAILED:
 			atune.log("AutoTune has failed")
 			self.notify("AutoTune Failed", "PID AutoTune has failed", type="danger", timeout=None)
