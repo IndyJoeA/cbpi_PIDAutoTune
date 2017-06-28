@@ -14,13 +14,16 @@ For more info on PID and autotuning, you can check out the following articles:
 ## Configuration
 
 1. Click on the **System** menu and choose **Hardware Settings**.
-2. If you do not have a kettle already created, click **Add** and create one first. Otherwise, click on the name of the kettle that you want to calibrate with autotune.
+2. If you do not have a kettle already created, click **Add** and create one first. Otherwise, click on the name of the kettle that you want to calibrate with autotune. 
+
+:warning: ***NOTE:*** There is currently a bug in the GPIOPWM actor. If you are using this mode, you should switch to GPIOSimple for the time being if you want to use PIDAutoTune or PIDArduino.
+
 3. Under the **Logic** drop-down menu, choose PIDAutoTune and then configure the following options:    
     1. **output step %**: defines the output of the autotune-algorithm when stepping up/down, e.g. output step = 100; step up (=heating) output = 100; step down (= cooling) output = -100. This setting should stay at 100%    
     2. **max. output %**: limits the maximum power output. This is useful if your heater is overpowered and would heat up the kettle way too fast. If you don't want to limit your heater, leave this at the default value of 100%
     3. **lookback seconds**: determines how far the algorithm will look back when trying to find local (temperature) extrema (minima/maxima). If the algorithm recognizes even short peaks as extrema, you should increase this value. If it doesn't recognize actual extrema, you should decrease it. Usually the default of 30 seconds work fine.
+        - *Descriptions of settings from the CraftBeerPi Wiki*
     4. Click the **Update** button once your settings are entered.
-    - *Settings descriptions from CraftBeerPi Wiki*
 4. Now we are ready to begin the autotune process. Navigate to the **Brewing** dashboard and turn on any pumps or agitators that you would normally be using with this kettle.
 5. Change the set point for the kettle to a typical temperature, like one you would use for mashing.
 6. Click the **Auto** ![auto](https://user-images.githubusercontent.com/29404417/27567034-3a429f70-5ab7-11e7-90ef-2ff21645febf.png) button for the kettle you want to calibrate and the autotuning process will commence.
