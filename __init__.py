@@ -49,10 +49,17 @@ class PIDAutoTune(KettleController):
 			heat_percent = atune.output
 			heating_time = sampleTime * heat_percent / 100
 			wait_time = sampleTime - heating_time
-			self.heater_on()
-			self.sleep(heating_time)
-			self.heater_off()
-			self.sleep(wait_time)
+			if heating_time == sampleTime:
+				self.heater_on()
+				self.sleep(heating_time)
+			elif wait_time == sampleTime:
+				self.heater_off()
+				self.sleep(wait_time)
+			else:
+				self.heater_on()
+				self.sleep(heating_time)
+				self.heater_off()
+				self.sleep(wait_time)
 
 		self.autoOff()
 
