@@ -244,7 +244,7 @@ class AutoTuner(object):
 				absMax = max(self._peaks[i], absMax)
 				absMin = min(self._peaks[i], absMin)
 
-			self._inducedAmplitude /= 6.0
+			self._inducedAmplitude /= len(self._peaks) - 2
 
 			# check convergence criterion for amplitude of induced oscillation
 			amplitudeDev = ((0.5 * (absMax - absMin) - self._inducedAmplitude)
