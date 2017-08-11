@@ -207,8 +207,8 @@ class AutoTuner(object):
 		isMin = True
 
 		for val in self._inputs:
-			isMax = isMax and (inputValue >= val)
-			isMin = isMin and (inputValue <= val)
+			isMax = isMax and (inputValue > val)
+			isMin = isMin and (inputValue < val)
 
 		self._inputs.append(inputValue)
 
