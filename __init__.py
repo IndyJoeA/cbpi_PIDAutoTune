@@ -13,9 +13,9 @@ from modules.core.props import Property
 @cbpi.controller
 class PIDAutoTune(KettleController):
 
-	a_outstep = Property.Number("output step %", True, 100)
-	b_maxout = Property.Number("max. output %", True, 100)
-	c_lookback = Property.Number("lookback seconds", True, 30)
+	a_outstep = Property.Number("output step %", True, 100, description="Default: 100. Sets the output when stepping up/down.")
+	b_maxout = Property.Number("max. output %", True, 100, description="Default: 100. Sets the max power output.")
+	c_lookback = Property.Number("lookback seconds", True, 30, description="Default: 30. How far back to look for min/max temps.")
 
 	def autoOff(self):
 		cbpi.cache.get("kettle")[self.kettle_id].state = False
