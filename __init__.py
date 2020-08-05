@@ -152,7 +152,7 @@ class AutoTuner(object):
 
 	@property
 	def tuningRules(self):
-		return self._tuning_rules.keys()
+		return list(self._tuning_rules.keys())
 
 	def getPIDParameters(self, tuningRule='ziegler-nichols'):
 		divisors = self._tuning_rules[tuningRule]
